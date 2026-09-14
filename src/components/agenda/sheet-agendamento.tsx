@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, Play, Plus, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, Play, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
