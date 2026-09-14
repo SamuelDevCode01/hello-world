@@ -110,17 +110,26 @@ export function SheetAgendamento({
       data,
       hora_inicio: inicio,
       hora_fim: fim,
-      id: agendamento?.id,
+      ...(agendamento ? { id: agendamento.id } : {}),
     });
-  }, [agendamentosDoDia, data, inicio, fim, agendamento?.id]);
+  }, [agendamentosDoDia, data, inicio, fim, agendamento]);
 
   async function onSalvar() {
-    if (!clienteId) return toast.error("Escolha a cliente.");
-    if (!servicoId) return toast.error("Escolha o serviço.");
-    if (!fim) return toast.error("Informe o horário final.");
+    if (!clienteId) {
+      toast.error("Escolha a cliente.");
+      return;
+    }
+    if (!servicoId) {
+      toast.error("Escolha o serviço.");
+      return;
+    }
+    if (!fim) {
+      toast.error("Informe o horário final.");
+      return;
+    }
     try {
       await salvar.mutateAsync({
-        id: agendamento?.id,
+        ...(agendamento ? { id: agendamento.id } : {}),
         dados: {
           cliente_id: clienteId,
           servico_id: servicoId,
