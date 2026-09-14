@@ -62,7 +62,7 @@ export function SheetCliente({ aberto, onOpenChange, cliente, onSalvo }: Props) 
   async function enviar(valores: Valores) {
     try {
       const salvo = await salvar.mutateAsync({
-        id: cliente?.id,
+        ...(cliente ? { id: cliente.id } : {}),
         dados: {
           nome: valores.nome.trim(),
           telefone: valores.telefone?.trim() || null,

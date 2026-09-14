@@ -190,7 +190,7 @@ function SheetServico({
   async function enviar(valores: Valores) {
     try {
       await salvar.mutateAsync({
-        id: servico?.id,
+        ...(servico ? { id: servico.id } : {}),
         dados: {
           nome: valores.nome.trim(),
           descricao: valores.descricao?.trim() || null,

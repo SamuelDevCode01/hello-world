@@ -210,7 +210,7 @@ export function SheetAgendamento({
           <div className="space-y-2">
             <Label>Serviço</Label>
             <Select
-              value={servicoId ?? undefined}
+              value={servicoId ?? ""}
               onValueChange={(v) => {
                 setServicoId(v);
                 setFimManual(false);
