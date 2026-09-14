@@ -14,16 +14,273 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agendamentos: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          observacoes: string | null
+          salao_id: string
+          servico_id: string
+          status: Database["public"]["Enums"]["status_agendamento"]
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          observacoes?: string | null
+          salao_id: string
+          servico_id: string
+          status?: Database["public"]["Enums"]["status_agendamento"]
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data?: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          observacoes?: string | null
+          salao_id?: string
+          servico_id?: string
+          status?: Database["public"]["Enums"]["status_agendamento"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_salao_id_fkey"
+            columns: ["salao_id"]
+            isOneToOne: false
+            referencedRelation: "saloes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clientes: {
+        Row: {
+          created_at: string
+          data_nascimento: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          salao_id: string
+          telefone: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_nascimento?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          salao_id: string
+          telefone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_nascimento?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          salao_id?: string
+          telefone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_salao_id_fkey"
+            columns: ["salao_id"]
+            isOneToOne: false
+            referencedRelation: "saloes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saloes: {
+        Row: {
+          ativo: boolean
+          cor_primaria: string
+          created_at: string
+          email: string | null
+          endereco: string | null
+          horario_abertura: string
+          horario_fechamento: string
+          id: string
+          intervalo_agenda_minutos: number
+          logo_url: string | null
+          nome: string
+          nome_responsavel: string | null
+          telefone: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cor_primaria?: string
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          horario_abertura?: string
+          horario_fechamento?: string
+          id?: string
+          intervalo_agenda_minutos?: number
+          logo_url?: string | null
+          nome: string
+          nome_responsavel?: string | null
+          telefone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cor_primaria?: string
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          horario_abertura?: string
+          horario_fechamento?: string
+          id?: string
+          intervalo_agenda_minutos?: number
+          logo_url?: string | null
+          nome?: string
+          nome_responsavel?: string | null
+          telefone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      servicos: {
+        Row: {
+          ativo: boolean
+          cor: string
+          created_at: string
+          custo_estimado: number | null
+          descricao: string | null
+          dias_para_retorno: number | null
+          duracao_minutos: number
+          id: string
+          nome: string
+          preco: number
+          salao_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string
+          created_at?: string
+          custo_estimado?: number | null
+          descricao?: string | null
+          dias_para_retorno?: number | null
+          duracao_minutos?: number
+          id?: string
+          nome: string
+          preco?: number
+          salao_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string
+          created_at?: string
+          custo_estimado?: number | null
+          descricao?: string | null
+          dias_para_retorno?: number | null
+          duracao_minutos?: number
+          id?: string
+          nome?: string
+          preco?: number
+          salao_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servicos_salao_id_fkey"
+            columns: ["salao_id"]
+            isOneToOne: false
+            referencedRelation: "saloes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuarios_saloes: {
+        Row: {
+          created_at: string
+          id: string
+          papel: Database["public"]["Enums"]["papel_salao"]
+          salao_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          papel?: Database["public"]["Enums"]["papel_salao"]
+          salao_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          papel?: Database["public"]["Enums"]["papel_salao"]
+          salao_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_saloes_salao_id_fkey"
+            columns: ["salao_id"]
+            isOneToOne: false
+            referencedRelation: "saloes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      papel_no_salao: {
+        Args: { _salao_id: string }
+        Returns: Database["public"]["Enums"]["papel_salao"]
+      }
+      pertence_ao_salao: { Args: { _salao_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      papel_salao: "owner" | "admin" | "profissional" | "recepcao"
+      status_agendamento:
+        | "agendado"
+        | "confirmado"
+        | "em_atendimento"
+        | "concluido"
+        | "cancelado"
+        | "nao_compareceu"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +407,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      papel_salao: ["owner", "admin", "profissional", "recepcao"],
+      status_agendamento: [
+        "agendado",
+        "confirmado",
+        "em_atendimento",
+        "concluido",
+        "cancelado",
+        "nao_compareceu",
+      ],
+    },
   },
 } as const
