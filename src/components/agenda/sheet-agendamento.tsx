@@ -394,5 +394,3 @@ export function SheetAgendamento({
     </Sheet>
   );
 }
-
-export { Plus };
