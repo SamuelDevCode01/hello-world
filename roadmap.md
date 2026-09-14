@@ -1,14 +1,20 @@
-# Valeria Hair Agendamentos — Primeira Entrega
+# Valeria Hair Agendamentos — primeira entrega
 
-- [ ] Migração: enums, tabelas, grants, índices, trigger conflito, RLS
-- [ ] Habilitar login e-mail/senha
-- [ ] Tema (paleta, Fraunces/Inter, rounded-xl)
-- [ ] Login /auth (sem cadastro público)
-- [ ] Onboarding do salão + SalaoProvider
-- [ ] AppShell: bottom nav mobile + sidebar desktop + FAB
-- [ ] Serviços CRUD
-- [ ] Clientes CRUD + busca + cadastro rápido
-- [ ] Agenda Dia + Semana, sheet de agendamento, ações de status
-- [ ] Configurações do salão
-- [ ] PWA (manifest + ícones, sem cache de dados)
-- [ ] Revisão final: build/TS/runtime
+## Concluído
+- [x] Banco: saloes, usuarios_saloes, clientes, servicos, agendamentos (FKs, índices, created_at/updated_at)
+- [x] RLS por salao_id com funções auxiliares (sem recursão) + GRANTs
+- [x] Conflito de horário garantido no banco (EXCLUDE gist; cancelado/não compareceu liberam)
+- [x] Login por e-mail/senha, sem cadastro público
+- [x] Onboarding do primeiro salão (vínculo owner automático por trigger)
+- [x] Layout: sidebar desktop + barra inferior mobile
+- [x] Agenda Dia e Semana, criar/editar/confirmar/iniciar/concluir/não compareceu/cancelar/excluir
+- [x] Cadastro rápido de cliente dentro do agendamento
+- [x] Clientes: busca, lista, cadastro/edição
+- [x] Serviços: cadastro/edição (duração, preço, custo, cor, retorno, ativo)
+- [x] Configurações do salão
+- [x] Comandas: tela "em preparação"
+- [x] PWA instalável (manifest, ícones, tema) sem cache de dados
+- [x] Typecheck e build limpos
+
+## Pendente (operacional, fora do código)
+- [ ] Criar a primeira conta de acesso no painel de usuários do backend
