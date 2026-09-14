@@ -15,6 +15,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedComandasRouteImport } from './routes/_authenticated/comandas'
+import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedMaisRouteImport } from './routes/_authenticated/mais'
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
 
 const IndexRoute = IndexRouteImport.update({
@@ -46,6 +48,17 @@ const AuthenticatedComandasRoute = AuthenticatedComandasRouteImport.update({
   path: '/comandas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedConfiguracoesRoute =
+  AuthenticatedConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMaisRoute = AuthenticatedMaisRouteImport.update({
+  id: '/mais',
+  path: '/mais',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedServicosRoute = AuthenticatedServicosRouteImport.update({
   id: '/servicos',
   path: '/servicos',
@@ -58,6 +71,8 @@ export interface FileRoutesByFullPath {
   '/agenda': typeof AuthenticatedAgendaRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/comandas': typeof AuthenticatedComandasRoute
+  '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/mais': typeof AuthenticatedMaisRoute
   '/servicos': typeof AuthenticatedServicosRoute
 }
 export interface FileRoutesByTo {
@@ -66,6 +81,8 @@ export interface FileRoutesByTo {
   '/agenda': typeof AuthenticatedAgendaRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/comandas': typeof AuthenticatedComandasRoute
+  '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/mais': typeof AuthenticatedMaisRoute
   '/servicos': typeof AuthenticatedServicosRoute
 }
 export interface FileRoutesById {
@@ -76,13 +93,31 @@ export interface FileRoutesById {
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/comandas': typeof AuthenticatedComandasRoute
+  '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/_authenticated/mais': typeof AuthenticatedMaisRoute
   '/_authenticated/servicos': typeof AuthenticatedServicosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/agenda' | '/clientes' | '/comandas' | '/servicos'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/agenda'
+    | '/clientes'
+    | '/comandas'
+    | '/configuracoes'
+    | '/mais'
+    | '/servicos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/agenda' | '/clientes' | '/comandas' | '/servicos'
+  to:
+    | '/'
+    | '/auth'
+    | '/agenda'
+    | '/clientes'
+    | '/comandas'
+    | '/configuracoes'
+    | '/mais'
+    | '/servicos'
   id:
     | '__root__'
     | '/'
@@ -91,6 +126,8 @@ export interface FileRouteTypes {
     | '/_authenticated/agenda'
     | '/_authenticated/clientes'
     | '/_authenticated/comandas'
+    | '/_authenticated/configuracoes'
+    | '/_authenticated/mais'
     | '/_authenticated/servicos'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +181,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedComandasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/configuracoes': {
+      id: '/_authenticated/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mais': {
+      id: '/_authenticated/mais'
+      path: '/mais'
+      fullPath: '/mais'
+      preLoaderRoute: typeof AuthenticatedMaisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/servicos': {
       id: '/_authenticated/servicos'
       path: '/servicos'
@@ -158,6 +209,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedComandasRoute: typeof AuthenticatedComandasRoute
+  AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
+  AuthenticatedMaisRoute: typeof AuthenticatedMaisRoute
   AuthenticatedServicosRoute: typeof AuthenticatedServicosRoute
 }
 
@@ -165,6 +218,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedComandasRoute: AuthenticatedComandasRoute,
+  AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
+  AuthenticatedMaisRoute: AuthenticatedMaisRoute,
   AuthenticatedServicosRoute: AuthenticatedServicosRoute,
 }
 
