@@ -1,131 +1,148 @@
 # Valeria Hair Agendamentos — Primeira Entrega
 
-Sistema de agendamentos para salão, multi-salão (multi-tenant) desde o primeiro dia, com a **Agenda como centro da experiência**. Projeto hoje está vazio (template limpo, sem backend ativo): tudo abaixo é construção nova.
+App de agendamentos para salão, mobile-first e instalável no celular, com a **Agenda como centro da experiência**. Multi-salão desde o primeiro dia: cada salão tem seu nome, cores e horários próprios, e nenhum salão enxerga dados de outro. O projeto hoje é um starter vazio, então tudo é construído do zero. O backend (Lovable Cloud) já está ligado.
 
-## O que a primeira entrega inclui
+## O que entra nesta entrega
 
-1. **Login** (sem cadastro público) — quem não tem conta não entra.
-2. **Configuração inicial do salão** — na primeira entrada, a pessoa cria o salão: nome, fuso, horário de funcionamento, duração padrão de atendimento.
-3. **Agenda diária e semanal** — visão principal, navegação por dia/semana, "hoje", horários livres e ocupados.
-4. **Agendamento** — criar, editar, cancelar e concluir.
-5. **Cadastro rápido de cliente** — dentro do próprio fluxo de agendamento (nome + telefone), sem sair da tela.
-6. **Serviços** — cadastro básico: nome, duração, preço, ativo/inativo.
+1. **Entrar no sistema** com e-mail e senha. Sem botão de criar conta — quem não foi cadastrado não entra.
+2. **Configuração inicial do salão** — quem entra e ainda não tem salão passa por um fluxo simples e bonito de "vamos configurar seu salão" (nome, responsável, contatos, horário de funcionamento, intervalo da agenda, cor). Nada de jargão sobre multi-salão.
+3. **Agenda Dia e Semana** — grade de horários gerada pelo horário de funcionamento do salão, navegação `< HOJE >`, seletor de data, card com horário, cliente, serviço, duração e status na cor do serviço.
+4. **Agendar de verdade** — tocar num horário vazio já abre a criação com data e hora preenchidas; tocar num agendamento abre os detalhes. Ações: confirmar, iniciar atendimento, concluir, reagendar, cancelar.
+5. **Cliente novo sem sair do agendamento** — busca por nome ou telefone com opção "+ Nova cliente" ali mesmo.
+6. **Clientes** — busca, lista em cards, cadastro e edição.
+7. **Serviços** — nome, descrição, duração, preço, custo estimado, cor, dias para retorno, ativo.
+8. **Configurações do salão** — todos os dados do salão editáveis; o nome do salão aparece no app no lugar de um nome fixo.
+9. **Instalável no celular** (PWA) com ícone e cores da marca.
 
-Fora do escopo desta entrega (mas a estrutura já comporta): financeiro, comissões, relatórios, lembretes por WhatsApp, agendamento pelo cliente final, múltiplos profissionais com agenda separada.
+Não entra agora (mas nada na base impede depois): comandas, pagamentos, produtos/estoque, pacotes, retorno inteligente, WhatsApp automático, aniversários, financeiro, vários profissionais, comissão, link público.
 
 ## Identidade visual
 
-- Fundo `#FAF8F5`, texto `#292524`, ação `#C1622D`, sucesso `#8A9A7E`, aviso `#C9962C`, erro `#B3492F`.
-- Cantos `rounded-xl`, sombras discretas.
-- Títulos em Fraunces, corpo em Inter.
-- Nada de roxo/lilás genérico. Todas as cores viram tokens do tema (nenhuma cor solta nos componentes).
+Fundo `#FAF8F5`, texto `#292524`, ação `#C1622D`, sucesso `#8A9A7E`, aviso `#C9962C`, erro `#B3492F`. Cantos `rounded-xl`, sombras discretas, bastante respiro, animações sutis, ícones lucide. Títulos em Fraunces, corpo em Inter. Clima de salão premium e acolhedor — nada de roxo de SaaS nem cara de painel corporativo.
 
 ## Navegação
 
-- **Celular:** barra inferior com Agenda · Clientes · Serviços · Ajustes. Agenda abre por padrão.
-- **Desktop:** menu lateral fixo com os mesmos itens e área de conteúdo larga.
-- Layout pensado primeiro para o celular; a tela grande é uma expansão, não o contrário.
+- **Celular:** barra inferior com Agenda · Clientes · Comandas · Mais, e botão **+** central (Novo agendamento / Nova cliente). Comandas aparece elegante e discretamente marcada como "em breve", sem tela quebrada.
+- **Desktop:** menu lateral com os mesmos itens.
+- Entrar no app cai direto na Agenda, com um cabeçalho pequeno: saudação com o nome da responsável e cards compactos de atendimentos de hoje, próximos e concluídos — tudo calculado dos próprios agendamentos.
 
-## Telas
+## Telas e rotas
 
 | Rota | Conteúdo |
 |---|---|
-| `/` | Redireciona para a agenda ou para o login |
-| `/auth` | Login (e-mail e senha) |
-| `/onboarding` | Criação do salão na primeira entrada |
-| `/agenda` | Agenda diária e semanal |
-| `/clientes` | Lista e busca de clientes |
-| `/servicos` | Lista e cadastro de serviços |
-| `/ajustes` | Dados do salão e sair |
+| `/` | Manda para a Agenda, para o login ou para a configuração inicial |
+| `/auth` | Entrar (e-mail e senha) |
+| `/configurar-salao` | Configuração inicial do salão |
+| `/agenda` | Agenda Dia e Semana (tela principal) |
+| `/clientes` | Busca, lista, cadastro e edição |
+| `/servicos` | Cadastro e edição de serviços |
+| `/mais` | Atalhos: serviços, configurações, sair |
+| `/configuracoes` | Dados do salão |
+| `/comandas` | Tela de "em breve" contida e elegante |
 
 ---
 
 ## Detalhes técnicos
 
-### Stack
-React + Vite + TypeScript, Tailwind + shadcn/ui, TanStack Router/Query, Supabase (Postgres, Auth, RLS), date-fns, lucide-react, React Hook Form + Zod. Backend: Lovable Cloud (ativado nesta entrega).
-
-### Banco de dados (migração inicial)
+### Banco (migração inicial única)
 
 ```text
-saloes (id, nome, timezone='America/Sao_Paulo', telefone, hora_abertura,
-        hora_fechamento, dias_funcionamento int[], intervalo_slot_min=30,
-        criado_em)
+saloes(id, nome, nome_responsavel, telefone, whatsapp, email, logo_url,
+       endereco, cor_primaria, horario_abertura time, horario_fechamento time,
+       intervalo_agenda_minutos int default 30, ativo bool, created_at, updated_at)
 
-usuarios_saloes (id, user_id -> auth.users, salao_id -> saloes,
-                 papel enum papel_salao('proprietario','profissional','recepcao'),
-                 ativo bool, criado_em)   UNIQUE(user_id, salao_id)
+usuarios_saloes(id, user_id uuid, salao_id -> saloes, papel papel_salao default 'owner',
+                created_at)  UNIQUE(user_id, salao_id)
+  enum papel_salao: owner | admin | profissional | recepcao
 
-clientes (id, salao_id, nome, telefone, observacoes, criado_em)
-          UNIQUE(salao_id, telefone) onde telefone não nulo
+clientes(id, salao_id, nome, telefone, whatsapp, data_nascimento date,
+         observacoes, created_at, updated_at)
 
-servicos (id, salao_id, nome, duracao_min, preco_centavos, cor, ativo, criado_em)
+servicos(id, salao_id, nome, descricao, duracao_minutos int, preco numeric(10,2),
+         custo_estimado numeric(10,2), cor text, dias_para_retorno int,
+         ativo bool default true, created_at, updated_at)
 
-agendamentos (id, salao_id, cliente_id -> clientes, servico_id -> servicos,
-              inicio timestamptz, fim timestamptz, preco_centavos,
-              status enum status_agendamento('agendado','concluido','cancelado'),
-              observacoes, criado_por -> auth.users, criado_em, atualizado_em)
+agendamentos(id, salao_id, cliente_id -> clientes, servico_id -> servicos,
+             data date, hora_inicio time, hora_fim time,
+             status status_agendamento default 'agendado', observacoes,
+             created_at, updated_at)
+  enum status_agendamento: agendado | confirmado | em_atendimento | concluido
+                           | cancelado | nao_compareceu
+  CHECK (hora_fim > hora_inicio)
 ```
 
-FKs com `ON DELETE CASCADE` em `salao_id`; `cliente_id`/`servico_id` com `RESTRICT` para não apagar histórico.
+FKs: `salao_id` com `ON DELETE CASCADE`; `cliente_id` e `servico_id` com `ON DELETE RESTRICT` (não apagar histórico). `updated_at` por trigger compartilhado.
 
-Índices: `usuarios_saloes(user_id)`, `clientes(salao_id, nome)`, `servicos(salao_id) where ativo`, e o principal da agenda `agendamentos(salao_id, inicio)`; mais `agendamentos(cliente_id)`.
+Índices: `usuarios_saloes(user_id)`, `usuarios_saloes(salao_id)`, `clientes(salao_id, nome)`, `clientes(salao_id, telefone)`, `servicos(salao_id) where ativo`, e o principal `agendamentos(salao_id, data, hora_inicio)` mais `agendamentos(cliente_id)` e `agendamentos(salao_id, status)`.
 
-**Anti-conflito no banco:** restrição de exclusão (`EXCLUDE USING gist`) impedindo dois agendamentos não cancelados do mesmo salão com faixas de horário sobrepostas — a validação na tela é conveniência, o banco é a garantia. Requer extensão `btree_gist`.
+**Conflito de horário no banco:** extensão `btree_gist` + `EXCLUDE USING gist (salao_id WITH =, data WITH =, timerange(hora_inicio, hora_fim) WITH &&) WHERE (status NOT IN ('cancelado','nao_compareceu'))`. Cancelado não bloqueia horário. A checagem na tela é conveniência; o banco é a garantia contra dois celulares agendando o mesmo horário ao mesmo tempo.
 
-### RLS multi-tenant
+### RLS sem recursão
 
-Função `security definer`:
+O risco clássico: uma policy de `usuarios_saloes` que consulta `usuarios_saloes` entra em recursão. Solução:
 
 ```sql
-public.pertence_ao_salao(_salao_id uuid) -- true se existe vínculo ativo em usuarios_saloes para auth.uid()
-public.papel_no_salao(_salao_id uuid)
+create function public.pertence_ao_salao(_salao_id uuid) returns boolean
+  language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.usuarios_saloes
+                 where user_id = auth.uid() and salao_id = _salao_id) $$;
 ```
 
-Evita recursão de política. Cada tabela: `GRANT SELECT/INSERT/UPDATE/DELETE ... TO authenticated`, `GRANT ALL TO service_role`, sem acesso `anon`. Políticas `TO authenticated` usando `pertence_ao_salao(salao_id)` em SELECT/INSERT/UPDATE/DELETE para clientes, servicos, agendamentos; `saloes` visível só a membros; `usuarios_saloes` lê apenas as próprias linhas do usuário e as do salão em que ele é proprietário. Criação de salão no onboarding via função `criar_salao(...)` que insere salão + vínculo de proprietário na mesma transação.
+`security definer` ignora RLS dentro da função, quebrando o ciclo. Uma função irmã `papel_no_salao(_salao_id)` fica pronta para permissões futuras.
 
-Papel NUNCA fica em tabela de perfil — fica em `usuarios_saloes`, lido por função security definer.
+- `usuarios_saloes`: policies **diretas** (`user_id = auth.uid()`), nunca via subconsulta na própria tabela.
+- `saloes`: leitura/edição se `pertence_ao_salao(id)`; inserção livre para autenticado (é o bootstrap), com trigger `after insert` criando o vínculo `owner` do criador automaticamente — assim o salão nunca nasce órfão e o app não precisa de duas chamadas.
+- `clientes`, `servicos`, `agendamentos`: as quatro operações usando `pertence_ao_salao(salao_id)` em `using` e `with check`.
+- `GRANT SELECT/INSERT/UPDATE/DELETE ... TO authenticated` e `GRANT ALL TO service_role` em cada tabela. **Nenhum acesso `anon`.**
+- Papel fica só em `usuarios_saloes`, nunca numa tabela de perfil.
 
-### Autenticação sem cadastro público
+Sem dados demo: o onboarding já deixa o salão utilizável e dados falsos poluiriam a agenda real.
 
-E-mail/senha com auto-confirmação ligada; a tela `/auth` tem **apenas login**, sem link de criar conta. Novas contas são criadas pela dona do salão (fora do escopo desta entrega, cria-se pelo painel da Cloud). Rotas privadas ficam sob o grupo protegido que redireciona para `/auth`; sair limpa cache e sessão.
+### Sem cadastro público / primeiro acesso
 
-### Datas e fuso
+A tela de login só faz login. A primeira conta é criada pela administração no painel do backend; o primeiro salão nasce do próprio onboarding dentro do app (o usuário logado sem vínculo é levado a `/configurar-salao`). Login por e-mail/senha precisa ser habilitado no backend na mesma entrega.
 
-Banco guarda `timestamptz` (UTC). O salão tem seu `timezone`. Na tela, tudo é formatado em pt-BR com date-fns + locale `ptBR` (ex.: "Seg, 14 set"). Grade da agenda montada a partir de hora de abertura/fechamento e intervalo de slot do salão. Semana começa na segunda-feira. Conversões centralizadas em um módulo único de data para evitar erro de fuso espalhado.
+### Camada de dados e frontend
 
-### Camada de dados
+- Rotas protegidas por grupo autenticado; `AppShell` decide barra inferior (celular) ou lateral (desktop).
+- `SalaoProvider` carrega salão + vínculo uma vez e serve nome, cores e horários ao app inteiro (nome do produto dinâmico).
+- TanStack Query por recurso (`useAgendamentos(intervalo)`, `useClientes(busca)`, `useServicos`), leitura direta pelo cliente do navegador — o isolamento é do banco, não do filtro da tela. Invalidação após cada mutação; estado otimista em confirmar/concluir.
+- Formulários com React Hook Form + Zod; toasts discretos (sonner); diálogo de confirmação para cancelar/excluir; skeletons e estados vazios que orientam a próxima ação.
+- `salao_id` sempre injetado por uma camada única de mutação, para nunca escapar do isolamento.
 
-Hooks com TanStack Query por recurso (`useAgendamentos(intervalo)`, `useClientes`, `useServicos`), leitura pelo cliente Supabase do navegador (RLS garante o isolamento), invalidação após cada mutação, estado otimista no concluir/cancelar. Formulários com React Hook Form + Zod: conflito de horário, serviço obrigatório, cliente obrigatório, horário dentro do funcionamento.
+### Componentes principais
 
-### Componentes principais da Agenda
+`AgendaHeader` (setas, HOJE, seletor de data, alternância Dia/Semana) · `GradeDia` (slots gerados do horário do salão) · `GradeSemana` (7 colunas compactas, rolagem horizontal no celular) · `CardAgendamento` (cor do serviço + estado) · `SheetAgendamento` (criar/editar, hora fim calculada pela duração e editável, alerta de conflito) · `SeletorCliente` (autocomplete + nova cliente embutida) · `BotaoFlutuanteNovo` · `EstadoVazio` · `CardCliente` · `FormServico`.
 
-- `AgendaHeader` — data atual, setas, botão "Hoje", alternância Dia/Semana.
-- `AgendaDia` — coluna de horários com blocos de atendimento.
-- `AgendaSemana` — 7 colunas compactas, rolagem horizontal no celular.
-- `CardAgendamento` — cliente, serviço, horário, cor por status.
-- `SheetAgendamento` — criar/editar; seleção de cliente com busca + "novo cliente" embutido; serviço preenche duração e preço.
-- `EstadoVazio` — dia livre com atalho para agendar.
+### Datas, horas e dinheiro
+
+Data como `date`, horas como `time` — nunca string formatada de UI. Tudo formatado em pt-BR com date-fns e locale `ptBR` (`dd/MM/yyyy`, `HH:mm`), moeda em R$ com `Intl.NumberFormat`. Semana começa na segunda. Toda conversão num módulo único (`lib/datas.ts`) para não espalhar erro de fuso — como data e hora são locais do salão, não há conversão de fuso silenciosa.
+
+### PWA
+
+`manifest.webmanifest` com nome, cores da marca e ícones 192/512 gerados e versionados no projeto (sem depender de asset externo), `theme-color`, e service worker leve com cache do app shell — sem cache de dados, para a agenda nunca mostrar informação velha.
 
 ### Sequência de implementação
 
-1. Ativar Lovable Cloud.
-2. Tema (cores, fontes, raio, sombras) + fontes via `<link>` na raiz.
-3. Migração única: extensão, enums, tabelas, grants, índices, restrição anti-conflito, funções e políticas.
-4. Login + rotas protegidas + redirecionamento do `/`.
-5. Onboarding do salão (bloqueia o app enquanto não houver salão).
-6. Layout: barra inferior no celular, lateral no desktop.
-7. Serviços (necessário para agendar).
-8. Clientes + cadastro rápido.
-9. Agenda diária → agendamento criar/editar/cancelar/concluir → agenda semanal.
-10. Ajustes do salão.
-11. Verificação no navegador do fluxo ponta a ponta, mais checagem de isolamento entre salões.
+1. Tema, fontes e tokens de cor + fontes via `<link>` na raiz.
+2. Migração única: extensão, enums, tabelas, grants, índices, restrição anti-conflito, funções e policies.
+3. Habilitar login por e-mail/senha; tela `/auth`; rotas protegidas; redirecionamento do `/`.
+4. Onboarding do salão + `SalaoProvider`.
+5. `AppShell`: barra inferior, sidebar, botão +.
+6. Serviços (pré-requisito para agendar).
+7. Clientes + cadastro rápido.
+8. Agenda Dia → sheet de agendamento com conflito → ações de status → Agenda Semana.
+9. Cabeçalho com saudação e cards do dia.
+10. Configurações do salão.
+11. PWA (manifesto, ícones, service worker).
+12. Verificação no navegador do fluxo ponta a ponta e teste de isolamento entre dois salões.
 
-### Riscos e decisões
+### Riscos e decisões importantes
 
-- **Isolamento é garantido no banco, não na tela.** Toda tabela carrega `salao_id` e toda política passa pela função de vínculo. Se um dia houver leitura pública, ela será explícita e restrita.
-- **Conflito de horário no banco** (`EXCLUDE`) evita corrida entre dois dispositivos agendando o mesmo horário; validação no formulário é só experiência.
-- **Fuso horário** é a fonte clássica de bug. Decisão: UTC no banco, fuso do salão na apresentação, um único módulo de conversão.
-- **Sem cadastro público** significa que a primeira conta precisa ser criada manualmente no painel da Cloud — passo operacional, não de código.
-- **Um profissional por salão nesta entrega:** `agendamentos` já pode receber `profissional_id` depois sem quebrar dados existentes; hoje a agenda é única.
-- **PWA completo (instalável/offline) não entra nesta entrega** — a entrega é mobile-first e com boa área de toque; manifesto e service worker ficam para a próxima, já que offline real exige sincronização e conflito de dados.
+- **Isolamento vive no banco.** Toda tabela carrega `salao_id`, toda policy passa pela função de vínculo, nenhum acesso anônimo. Filtro de tela é só usabilidade.
+- **Recursão de RLS** é evitada por `security definer` + policies diretas em `usuarios_saloes`. Esse é o ponto mais delicado do schema.
+- **Conflito de agenda** garantido por restrição do banco, não só pela tela; cancelado e não compareceu liberam o horário.
+- **Bootstrap sem cadastro público** depende de um passo manual para criar a primeira conta — operacional, não de código. Vale confirmar quem fará isso.
+- **Uma agenda por salão nesta entrega.** `agendamentos` receberá `profissional_id` depois sem quebrar dados; hoje a grade é única, e trocar para várias colunas exige rever a restrição de conflito (passará a incluir o profissional).
+- **Comandas aparece na barra inferior** sem existir ainda; será um estado "em breve" cuidado, não um placeholder feio.
+- **Service worker mal configurado** é a causa mais comum de "o app não atualiza". Decisão: cachear só o shell, nunca dados.
