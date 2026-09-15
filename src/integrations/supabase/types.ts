@@ -63,6 +63,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agendamentos_cliente_mesmo_salao"
+            columns: ["cliente_id", "salao_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id", "salao_id"]
+          },
+          {
             foreignKeyName: "agendamentos_salao_id_fkey"
             columns: ["salao_id"]
             isOneToOne: false
@@ -75,6 +82,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "servicos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_servico_mesmo_salao"
+            columns: ["servico_id", "salao_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id", "salao_id"]
           },
         ]
       }

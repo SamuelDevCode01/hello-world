@@ -6,7 +6,7 @@ import {
   Scissors,
   Users,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import { OnboardingSalao } from "@/components/salao/onboarding-salao";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,8 +26,30 @@ const ITENS: ItemNav[] = [
   { to: "/mais", label: "Mais", icone: Ellipsis },
 ];
 
+const COR_PADRAO = "#C1622D";
+const HEX = /^#[0-9a-fA-F]{6}$/;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { salao, carregando } = useSalao();
+  const nome = salao?.nome ?? null;
+  const cor = salao?.cor_primaria ?? null;
+
+  useEffect(() => {
+    document.title = nome ? `${nome} | Agenda` : "Agenda do Salão";
+  }, [nome]);
+
+  useEffect(() => {
+    const valor = cor && HEX.test(cor) ? cor : COR_PADRAO;
+    const raiz = document.documentElement;
+    raiz.style.setProperty("--primary", valor);
+    raiz.style.setProperty("--ring", valor);
+    raiz.style.setProperty("--sidebar-primary", valor);
+    return () => {
+      raiz.style.removeProperty("--primary");
+      raiz.style.removeProperty("--ring");
+      raiz.style.removeProperty("--sidebar-primary");
+    };
+  }, [cor]);
 
   if (carregando) {
     return (
