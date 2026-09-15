@@ -141,6 +141,13 @@ function RootComponent() {
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const registrar = () => void navigator.serviceWorker.register("/sw.js").catch(() => {});
+    if (document.readyState === "complete") registrar();
+    else window.addEventListener("load", registrar, { once: true });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
