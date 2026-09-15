@@ -22,9 +22,9 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Entrar — Valeria Hair Agendamentos" },
+      { title: "Entrar — Agenda do Salão" },
       { name: "description", content: "Acesse a agenda do seu salão." },
-      { property: "og:title", content: "Entrar — Valeria Hair Agendamentos" },
+      { property: "og:title", content: "Entrar — Agenda do Salão" },
       { property: "og:description", content: "Acesse a agenda do seu salão." },
     ],
   }),

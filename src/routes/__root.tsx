@@ -79,7 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Valeria Hair Agendamentos" },
+      { title: "Agenda do Salão | Agendamentos e clientes" },
       {
         name: "description",
         content: "Agenda diária e semanal, clientes e serviços para o dia a dia do salão.",
@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#FAF8F5" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-      { property: "og:title", content: "Valeria Hair Agendamentos" },
+      { property: "og:title", content: "Agenda do Salão | Agendamentos e clientes" },
       {
         property: "og:description",
         content: "Agenda diária e semanal, clientes e serviços para o dia a dia do salão.",
