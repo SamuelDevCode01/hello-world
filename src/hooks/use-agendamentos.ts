@@ -7,12 +7,12 @@ import { STATUS_LIBERA_HORARIO, type StatusAgendamento } from "@/lib/status";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type Agendamento = Tables<"agendamentos"> & {
-  clientes: Pick<Tables<"clientes">, "id" | "nome" | "telefone"> | null;
+  clientes: Pick<Tables<"clientes">, "id" | "nome" | "telefone" | "whatsapp"> | null;
   servicos: Pick<Tables<"servicos">, "id" | "nome" | "cor" | "duracao_minutos" | "preco"> | null;
 };
 
 const SELECT =
-  "*, clientes(id, nome, telefone), servicos(id, nome, cor, duracao_minutos, preco)";
+  "*, clientes(id, nome, telefone, whatsapp), servicos(id, nome, cor, duracao_minutos, preco)";
 
 /** Agendamentos entre duas datas (inclusive), no formato yyyy-MM-dd. */
 export function useAgendamentos(dataInicio: string, dataFim: string) {
