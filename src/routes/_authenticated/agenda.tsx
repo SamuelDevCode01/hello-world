@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSalaoAtual } from "@/contexts/salao";
 import { useAgendamentos, type Agendamento } from "@/hooks/use-agendamentos";
-import { useResumoOperacao } from "@/hooks/use-operacao";
+import { useResumoOperacao } from "@/hooks/use-operacao-leituras";
 import { gerarSlots, horaCurta, paraDataISO, semanaDe } from "@/lib/datas";
 import { formatarMoeda, saudacao } from "@/lib/formato";
 import { STATUS_LIBERA_HORARIO } from "@/lib/status";
