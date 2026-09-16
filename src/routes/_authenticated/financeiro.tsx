@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Banknote, CreditCard, DollarSign, Receipt, ShoppingBag, WalletCards } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFinanceiro } from "@/hooks/use-operacao";
@@ -25,4 +26,4 @@ function PaginaFinanceiro(){
     <p className="text-xs text-muted-foreground">Valores são operacionais e não substituem contabilidade, impostos ou DRE.</p>
   </div>;
 }
-function Card({titulo,valor,icone}:{titulo:string;valor:string;icone?:React.ReactNode}){return <div className="card-elegante px-4 py-4"><div className="flex items-center gap-2 text-xs text-muted-foreground">{icone}{titulo}</div><p className="mt-1 text-xl font-semibold tabular-nums">{valor}</p></div>}
+function Card({titulo,valor,icone}:{titulo:string;valor:string;icone?:ReactNode}){return <div className="card-elegante px-4 py-4"><div className="flex items-center gap-2 text-xs text-muted-foreground">{icone}{titulo}</div><p className="mt-1 text-xl font-semibold tabular-nums">{valor}</p></div>}
