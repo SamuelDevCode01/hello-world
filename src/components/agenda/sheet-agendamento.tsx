@@ -18,7 +18,8 @@ import {
   temConflito, useAlterarStatus, useExcluirAgendamento, useSalvarAgendamento, type Agendamento,
 } from "@/hooks/use-agendamentos";
 import { useConcluirComPacote, useConcluirComRecebimento } from "@/hooks/use-finalizar-atendimento";
-import { useClientePacotes, useComandas, useCriarComanda, useTemplates, whatsappUrl } from "@/hooks/use-operacao";
+import { useClientePacotes, useComandas } from "@/hooks/use-operacao-leituras";
+import { useCriarComanda, useTemplates, whatsappUrl } from "@/hooks/use-operacao";
 import { useServicos } from "@/hooks/use-servicos";
 import { formatarDuracao, horaCurta, somarMinutos } from "@/lib/datas";
 import { formatarMoeda } from "@/lib/formato";
