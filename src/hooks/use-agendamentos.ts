@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useSalaoAtual } from "@/contexts/salao";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { minutosDeHora, paraHoraISO } from "@/lib/datas";
 import { STATUS_LIBERA_HORARIO, type StatusAgendamento } from "@/lib/status";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type Agendamento = Tables<"agendamentos"> & {
   clientes: Pick<Tables<"clientes">, "id" | "nome" | "telefone" | "whatsapp"> | null;
@@ -12,13 +12,14 @@ export type Agendamento = Tables<"agendamentos"> & {
 };
 
 const SELECT =
-  "*, clientes(id, nome, telefone, whatsapp), servicos(id, nome, cor, duracao_minutos, preco)";
+  "*, clientes:clientes!agendamentos_cliente_mesmo_salao(id,nome,telefone,whatsapp), servicos:servicos!agendamentos_servico_mesmo_salao(id,nome,cor,duracao_minutos,preco)";
 
 /** Agendamentos entre duas datas (inclusive), no formato yyyy-MM-dd. */
 export function useAgendamentos(dataInicio: string, dataFim: string) {
   const salao = useSalaoAtual();
   return useQuery({
     queryKey: ["agendamentos", salao.id, dataInicio, dataFim],
+    staleTime: 15_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agendamentos")
@@ -53,6 +54,14 @@ function traduzirErro(error: { code?: string; message?: string }): Error {
   return new Error(error.message ?? "Não foi possível salvar o agendamento.");
 }
 
+function invalidarAgenda(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: ["agendamentos"] });
+  void qc.invalidateQueries({ queryKey: ["resumo-operacao"] });
+  void qc.invalidateQueries({ queryKey: ["clientes-resumo"] });
+  void qc.invalidateQueries({ queryKey: ["cliente-detalhes"] });
+  void qc.invalidateQueries({ queryKey: ["retornos"] });
+}
+
 export function useSalvarAgendamento() {
   const salao = useSalaoAtual();
   const qc = useQueryClient();
@@ -72,7 +81,11 @@ export function useSalvarAgendamento() {
         ...(dados.status ? { status: dados.status } : {}),
       };
       if (id) {
-        const { error } = await supabase.from("agendamentos").update(payload).eq("id", id);
+        const { error } = await supabase
+          .from("agendamentos")
+          .update(payload)
+          .eq("id", id)
+          .eq("salao_id", salao.id);
         if (error) throw traduzirErro(error);
         return id;
       }
@@ -84,29 +97,39 @@ export function useSalvarAgendamento() {
       if (error) throw traduzirErro(error);
       return data.id;
     },
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["agendamentos"] }),
+    onSuccess: () => invalidarAgenda(qc),
   });
 }
 
 export function useAlterarStatus() {
+  const salao = useSalaoAtual();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: StatusAgendamento }) => {
-      const { error } = await supabase.from("agendamentos").update({ status }).eq("id", id);
+      const { error } = await supabase
+        .from("agendamentos")
+        .update({ status })
+        .eq("id", id)
+        .eq("salao_id", salao.id);
       if (error) throw traduzirErro(error);
     },
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["agendamentos"] }),
+    onSuccess: () => invalidarAgenda(qc),
   });
 }
 
 export function useExcluirAgendamento() {
+  const salao = useSalaoAtual();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("agendamentos").delete().eq("id", id);
+      const { error } = await supabase
+        .from("agendamentos")
+        .delete()
+        .eq("id", id)
+        .eq("salao_id", salao.id);
       if (error) throw error;
     },
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["agendamentos"] }),
+    onSuccess: () => invalidarAgenda(qc),
   });
 }
 
