@@ -1,0 +1,26 @@
+create unique index if not exists uq_agendamentos_id_salao on public.agendamentos(id, salao_id);
+create unique index if not exists uq_clientes_id_salao on public.clientes(id, salao_id);
+create unique index if not exists uq_servicos_id_salao on public.servicos(id, salao_id);
+create unique index if not exists uq_comandas_id_salao on public.comandas(id, salao_id);
+create unique index if not exists uq_produtos_id_salao on public.produtos(id, salao_id);
+create unique index if not exists uq_pacotes_id_salao on public.pacotes(id, salao_id);
+create unique index if not exists uq_cliente_pacotes_id_salao on public.cliente_pacotes(id, salao_id);
+
+alter table public.cliente_preferencias add constraint cliente_preferencias_cliente_salao_fkey foreign key (cliente_id,salao_id) references public.clientes(id,salao_id) on delete cascade;
+alter table public.retornos_ignorados add constraint retornos_ignorados_cliente_salao_fkey foreign key (cliente_id,salao_id) references public.clientes(id,salao_id) on delete cascade;
+alter table public.retornos_ignorados add constraint retornos_ignorados_servico_salao_fkey foreign key (servico_id,salao_id) references public.servicos(id,salao_id) on delete cascade;
+alter table public.comandas add constraint comandas_cliente_salao_fkey foreign key (cliente_id,salao_id) references public.clientes(id,salao_id) on delete restrict;
+alter table public.comandas add constraint comandas_agendamento_salao_fkey foreign key (agendamento_id,salao_id) references public.agendamentos(id,salao_id) on delete set null;
+alter table public.comanda_itens add constraint comanda_itens_comanda_salao_fkey foreign key (comanda_id,salao_id) references public.comandas(id,salao_id) on delete cascade;
+alter table public.comanda_itens add constraint comanda_itens_servico_salao_fkey foreign key (servico_id,salao_id) references public.servicos(id,salao_id) on delete restrict;
+alter table public.comanda_itens add constraint comanda_itens_produto_salao_fkey foreign key (produto_id,salao_id) references public.produtos(id,salao_id) on delete restrict;
+alter table public.pagamentos add constraint pagamentos_comanda_salao_fkey foreign key (comanda_id,salao_id) references public.comandas(id,salao_id) on delete cascade;
+alter table public.movimentacoes_estoque add constraint movimentacoes_produto_salao_fkey foreign key (produto_id,salao_id) references public.produtos(id,salao_id) on delete cascade;
+alter table public.movimentacoes_estoque add constraint movimentacoes_comanda_salao_fkey foreign key (comanda_id,salao_id) references public.comandas(id,salao_id) on delete set null;
+alter table public.pacote_itens add constraint pacote_itens_pacote_salao_fkey foreign key (pacote_id,salao_id) references public.pacotes(id,salao_id) on delete cascade;
+alter table public.pacote_itens add constraint pacote_itens_servico_salao_fkey foreign key (servico_id,salao_id) references public.servicos(id,salao_id) on delete restrict;
+alter table public.cliente_pacotes add constraint cliente_pacotes_cliente_salao_fkey foreign key (cliente_id,salao_id) references public.clientes(id,salao_id) on delete restrict;
+alter table public.cliente_pacotes add constraint cliente_pacotes_pacote_salao_fkey foreign key (pacote_id,salao_id) references public.pacotes(id,salao_id) on delete restrict;
+alter table public.cliente_pacote_usos add constraint cliente_pacote_usos_pacote_salao_fkey foreign key (cliente_pacote_id,salao_id) references public.cliente_pacotes(id,salao_id) on delete cascade;
+alter table public.cliente_pacote_usos add constraint cliente_pacote_usos_servico_salao_fkey foreign key (servico_id,salao_id) references public.servicos(id,salao_id) on delete restrict;
+alter table public.cliente_pacote_usos add constraint cliente_pacote_usos_agendamento_salao_fkey foreign key (agendamento_id,salao_id) references public.agendamentos(id,salao_id) on delete set null;
