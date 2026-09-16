@@ -75,7 +75,7 @@ export function usePacotes() {
       const { data, error } = await db
         .from("pacotes")
         .select(
-          "*, pacote_itens:pacote_itens!pacote_itens_pacote_salao_fkey(id,servico_id,quantidade,servicos:servicos!pacote_itens_servico_salao_fkey(nome))",
+          "*, pacote_itens:pacote_itens!pacote_itens_pacote_salao_fkey(id,servico_id,quantidade,servicos:servicos!pacote_itens_servico_salao_fkey(nome,preco))",
         )
         .eq("salao_id", salao.id)
         .order("nome");
@@ -110,12 +110,12 @@ export function useComandas() {
   const salao = useSalaoAtual();
   return useQuery({
     queryKey: ["comandas", salao.id],
-    staleTime: 15_000,
+    staleTime: 10_000,
     queryFn: async () => {
       const { data, error } = await db
         .from("comandas")
         .select(
-          "*, clientes:clientes!comandas_cliente_salao_fkey(nome), comanda_itens:comanda_itens!comanda_itens_comanda_salao_fkey(*), pagamentos:pagamentos!pagamentos_comanda_salao_fkey(*)",
+          "*, clientes:clientes!comandas_cliente_salao_fkey(id,nome,telefone,whatsapp,observacoes,foto_path), comanda_itens:comanda_itens!comanda_itens_comanda_salao_fkey(*), pagamentos:pagamentos!pagamentos_comanda_salao_fkey(*)",
         )
         .eq("salao_id", salao.id)
         .order("opened_at", { ascending: false })
