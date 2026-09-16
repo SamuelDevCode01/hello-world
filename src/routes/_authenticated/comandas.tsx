@@ -1,45 +1,39 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ReceiptText } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { CheckCircle2, Plus, ReceiptText } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useClientes } from "@/hooks/use-clientes";
+import { useAdicionarItemComanda, useAdicionarPagamento, useComandas, useCriarComanda, useFecharComanda, useProdutos, type Comanda } from "@/hooks/use-operacao";
+import { useServicos } from "@/hooks/use-servicos";
+import { formatarMoeda } from "@/lib/formato";
 
 export const Route = createFileRoute("/_authenticated/comandas")({
   component: PaginaComandas,
-  head: () => ({
-    meta: [
-      { title: "Comandas | Em preparação" },
-      {
-        name: "description",
-        content: "O fechamento de comandas e pagamentos chega em uma próxima etapa do salão.",
-      },
-      { property: "og:title", content: "Comandas | Em preparação" },
-      {
-        property: "og:description",
-        content: "O fechamento de comandas e pagamentos chega em uma próxima etapa.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Atendimento e pagamento | Agenda do Salão" }] }),
 });
 
-function PaginaComandas() {
-  return (
-    <div className="space-y-5">
-      <h1 className="font-display text-2xl">Comandas</h1>
-      <div className="card-elegante flex flex-col items-center gap-3 px-6 py-14 text-center">
-        <span className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-          <ReceiptText className="size-6" />
-        </span>
-        <p className="font-medium">Em preparação</p>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          O fechamento de atendimentos com pagamentos e produtos chega em uma próxima etapa. Por
-          enquanto, tudo acontece na agenda.
-        </p>
-        <Button asChild variant="outline" className="rounded-xl">
-          <Link to="/agenda">Ir para a agenda</Link>
-        </Button>
-      </div>
-    </div>
-  );
+function PaginaComandas(){
+  const {data:comandas=[]}=useComandas(); const {data:clientes=[]}=useClientes(); const criar=useCriarComanda();
+  const [clienteId,setClienteId]=useState(""); const [aberta,setAberta]=useState<Comanda|null>(null);
+  async function nova(){if(!clienteId){toast.error("Escolha a cliente.");return;}try{const id=await criar.mutateAsync({clienteId});setClienteId("");const c=(comandas.find(x=>x.id===id)??{id}) as Comanda;setAberta(c);toast.success("Atendimento aberto.");}catch{toast.error("Não foi possível abrir o atendimento.");}}
+  return <div className="space-y-5"><header><h1 className="font-display text-2xl">Atendimento e pagamento</h1><p className="text-sm text-muted-foreground">Tela contextual para finalizar serviços e vendas. Ela não fica na navegação principal.</p></header><div className="card-elegante space-y-3 p-4"><Label>Abrir atendimento avulso</Label><div className="flex gap-2"><Select value={clienteId} onValueChange={setClienteId}><SelectTrigger className="h-12 flex-1 rounded-xl"><SelectValue placeholder="Cliente"/></SelectTrigger><SelectContent>{clientes.map(c=><SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent></Select><Button className="h-12 rounded-xl" onClick={()=>void nova()}><Plus className="size-4"/> Abrir</Button></div></div>{comandas.length===0?<div className="card-elegante flex flex-col items-center gap-3 px-6 py-12 text-center"><ReceiptText className="size-8 text-muted-foreground"/><p className="text-sm text-muted-foreground">Nenhum atendimento financeiro registrado.</p></div>:<div className="space-y-2">{comandas.map(c=><button key={c.id} onClick={()=>setAberta(c)} className="card-elegante flex w-full items-center gap-3 px-4 py-3 text-left"><span className="min-w-0 flex-1"><span className="block font-medium">{c.clientes?.nome??"Cliente"}</span><span className="text-xs text-muted-foreground">{new Date(c.opened_at).toLocaleString("pt-BR")} · {c.status}</span></span><strong>{formatarMoeda(Number(c.total))}</strong></button>)}</div>}<SheetComanda comanda={aberta} onOpenChange={(v)=>!v&&setAberta(null)}/></div>
+}
+
+function SheetComanda({comanda,onOpenChange}:{comanda:Comanda|null;onOpenChange:(v:boolean)=>void}){
+  const {data:lista=[]}=useComandas(); const atual=lista.find(c=>c.id===comanda?.id)??comanda; const {data:servicos=[]}=useServicos(true); const {data:produtos=[]}=useProdutos(); const addItem=useAdicionarItemComanda(); const addPag=useAdicionarPagamento(); const fechar=useFecharComanda();
+  const [servicoId,setServicoId]=useState(""); const [produtoId,setProdutoId]=useState(""); const [forma,setForma]=useState("pix"); const [valor,setValor]=useState("");
+  const pago=useMemo(()=>atual?.pagamentos?.reduce((s,p)=>s+Number(p.valor),0)??0,[atual]); const falta=Math.max(0,Number(atual?.total??0)-pago);
+  async function servico(){if(!atual||!servicoId)return;const s=servicos.find(x=>x.id===servicoId);if(!s)return;try{await addItem.mutateAsync({comanda_id:atual.id,tipo:"servico",servico_id:s.id,produto_id:null,descricao:s.nome,quantidade:1,valor_unitario:Number(s.preco)});setServicoId("");toast.success("Serviço adicionado.");}catch{toast.error("Não foi possível adicionar o serviço.");}}
+  async function produto(){if(!atual||!produtoId)return;const p=produtos.find(x=>x.id===produtoId);if(!p)return;try{await addItem.mutateAsync({comanda_id:atual.id,tipo:"produto",produto_id:p.id,servico_id:null,descricao:p.nome,quantidade:1,valor_unitario:Number(p.preco_venda)});setProdutoId("");toast.success("Produto adicionado.");}catch{toast.error("Não foi possível adicionar o produto.");}}
+  async function pagamento(){if(!atual)return;const v=Number(valor||falta);if(v<=0){toast.error("Informe o valor.");return;}try{await addPag.mutateAsync({comandaId:atual.id,forma,valor:v});setValor("");toast.success("Pagamento registrado.");}catch{toast.error("Não foi possível registrar o pagamento.");}}
+  async function concluir(){if(!atual)return;try{await fechar.mutateAsync(atual.id);toast.success("Atendimento finalizado e estoque atualizado.");onOpenChange(false);}catch(e){toast.error(e instanceof Error?e.message:"Confira os pagamentos antes de fechar.");}}
+  if(!atual)return <Sheet open={false}/>;
+  const editavel=atual.status==="aberta";
+  return <Sheet open={Boolean(comanda)} onOpenChange={onOpenChange}><SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-2xl sm:max-w-xl md:inset-y-0 md:right-0 md:left-auto md:h-full md:max-h-none md:rounded-none"><SheetHeader className="px-5 pt-5 text-left"><SheetTitle>{atual.clientes?.nome??"Atendimento"}</SheetTitle><SheetDescription>{atual.status==="fechada"?"Pagamento concluído.":"Adicione serviços, produtos e pagamentos."}</SheetDescription></SheetHeader><div className="space-y-5 px-5 pb-8 pt-3"><div className="space-y-2">{(atual.comanda_itens??[]).length===0?<p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">Nenhum item ainda.</p>:atual.comanda_itens?.map(i=><div key={i.id} className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2"><div><p className="text-sm font-medium">{i.descricao}</p><p className="text-xs text-muted-foreground">{Number(i.quantidade)} × {formatarMoeda(Number(i.valor_unitario))}</p></div><strong>{formatarMoeda(Number(i.total))}</strong></div>)}</div>{editavel&&<><div className="grid gap-2 sm:grid-cols-2"><div className="flex gap-2"><Select value={servicoId} onValueChange={setServicoId}><SelectTrigger className="h-11 flex-1 rounded-xl"><SelectValue placeholder="Serviço"/></SelectTrigger><SelectContent>{servicos.map(s=><SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}</SelectContent></Select><Button size="icon" variant="outline" className="size-11 rounded-xl" onClick={()=>void servico()}><Plus className="size-4"/></Button></div><div className="flex gap-2"><Select value={produtoId} onValueChange={setProdutoId}><SelectTrigger className="h-11 flex-1 rounded-xl"><SelectValue placeholder="Produto"/></SelectTrigger><SelectContent>{produtos.filter(p=>p.ativo&&p.uso!=="interno").map(p=><SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}</SelectContent></Select><Button size="icon" variant="outline" className="size-11 rounded-xl" onClick={()=>void produto()}><Plus className="size-4"/></Button></div></div></>}<div className="rounded-xl bg-muted/50 p-4"><div className="flex justify-between text-sm"><span>Subtotal</span><span>{formatarMoeda(Number(atual.subtotal))}</span></div><div className="mt-2 flex justify-between text-lg font-semibold"><span>Total</span><span>{formatarMoeda(Number(atual.total))}</span></div><div className="mt-1 flex justify-between text-xs text-muted-foreground"><span>Pago</span><span>{formatarMoeda(pago)}</span></div></div>{editavel&&<div className="space-y-3"><Label>Registrar pagamento</Label><div className="grid grid-cols-[1fr_1fr_auto] gap-2"><Select value={forma} onValueChange={setForma}><SelectTrigger className="h-11 rounded-xl"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="pix">PIX</SelectItem><SelectItem value="dinheiro">Dinheiro</SelectItem><SelectItem value="debito">Débito</SelectItem><SelectItem value="credito">Crédito</SelectItem><SelectItem value="outro">Outro</SelectItem></SelectContent></Select><Input type="number" step="0.01" className="h-11 rounded-xl" placeholder={String(falta.toFixed(2))} value={valor} onChange={e=>setValor(e.target.value)}/><Button className="h-11 rounded-xl" onClick={()=>void pagamento()}>Adicionar</Button></div>{atual.pagamentos?.map(p=><div key={p.id} className="flex justify-between text-sm"><span className="capitalize">{p.forma_pagamento}</span><span>{formatarMoeda(Number(p.valor))}</span></div>)}<Button className="h-12 w-full rounded-xl" disabled={falta>0.009||fechar.isPending} onClick={()=>void concluir()}><CheckCircle2 className="size-4"/>{falta>0.009?`Faltam ${formatarMoeda(falta)}`:"Fechar atendimento"}</Button></div>}</div></SheetContent></Sheet>
 }
