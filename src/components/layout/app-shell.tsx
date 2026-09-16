@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Boxes, CalendarDays, Gift, Package, RotateCcw, Scissors, Settings, Users, WalletCards } from "lucide-react";
+import { Boxes, CalendarDays, CircleDollarSign, Gift, Package, RotateCcw, Scissors, Settings, Users, WalletCards } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
 import { BuscaGlobal } from "@/components/layout/busca-global";
@@ -8,12 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSalao } from "@/contexts/salao";
 import { cn } from "@/lib/utils";
 
-type RotaNav = "/agenda" | "/clientes" | "/servicos" | "/retornos" | "/produtos" | "/estoque" | "/pacotes" | "/financeiro" | "/configuracoes";
+type RotaNav = "/agenda" | "/clientes" | "/servicos" | "/retornos" | "/comandas" | "/produtos" | "/estoque" | "/pacotes" | "/financeiro" | "/configuracoes";
 type ItemNav = { to: RotaNav; label: string; icone: typeof CalendarDays };
 const PRINCIPAIS: ItemNav[] = [
   { to: "/agenda", label: "Agenda", icone: CalendarDays },
   { to: "/clientes", label: "Clientes", icone: Users },
   { to: "/servicos", label: "Serviços", icone: Scissors },
+  { to: "/comandas", label: "Caixa", icone: CircleDollarSign },
   { to: "/retornos", label: "Retornos", icone: RotateCcw },
 ];
 const GESTAO: ItemNav[] = [
@@ -23,7 +24,7 @@ const GESTAO: ItemNav[] = [
   { to: "/financeiro", label: "Financeiro", icone: WalletCards },
   { to: "/configuracoes", label: "Configurações", icone: Settings },
 ];
-const MOBILE: ItemNav[] = [PRINCIPAIS[0]!, PRINCIPAIS[1]!, PRINCIPAIS[2]!, PRINCIPAIS[3]!, GESTAO[4]!];
+const MOBILE: ItemNav[] = [PRINCIPAIS[0]!, PRINCIPAIS[1]!, PRINCIPAIS[3]!, PRINCIPAIS[2]!, GESTAO[4]!];
 const COR_PADRAO = "#C1622D";
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
