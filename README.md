@@ -1,24 +1,42 @@
-# Hello World!
+# Sistema de Agendamento
 
-olá
+Aplicação web para gestão de salões de beleza, com agenda, clientes, serviços, caixa, produtos, estoque, pacotes, retornos e financeiro.
 
-This project was built with [Lovable](https://lovable.dev).
+## Stack
 
-## Build with Lovable
+- React 19
+- TypeScript
+- TanStack Start / TanStack Router
+- Vite
+- Tailwind CSS
+- Supabase
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/4c20f4ac-4a25-4da7-b7d6-241319e0d7ff).
+## Desenvolvimento local
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Requisitos: Node.js 20+ e npm.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+git clone <url-do-repositorio>
+cd hello-world
+npm install
 npm run dev
 ```
+
+## Build de produção
+
+```sh
+npm run build
+```
+
+## Variáveis de ambiente
+
+Configure as variáveis abaixo no ambiente de execução:
+
+```env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_URL=
+SUPABASE_PUBLISHABLE_KEY=
+```
+
+Chaves administrativas do Supabase devem permanecer exclusivamente no ambiente de servidor quando forem necessárias.
