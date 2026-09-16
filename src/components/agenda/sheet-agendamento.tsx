@@ -18,7 +18,7 @@ import {
   temConflito, useAlterarStatus, useExcluirAgendamento, useSalvarAgendamento, type Agendamento,
 } from "@/hooks/use-agendamentos";
 import { useConcluirComPacote, useConcluirComRecebimento } from "@/hooks/use-finalizar-atendimento";
-import { useClientePacotes, useTemplates, whatsappUrl } from "@/hooks/use-operacao";
+import { useClientePacotes, useComandas, useCriarComanda, useTemplates, whatsappUrl } from "@/hooks/use-operacao";
 import { useServicos } from "@/hooks/use-servicos";
 import { formatarDuracao, horaCurta, somarMinutos } from "@/lib/datas";
 import { formatarMoeda } from "@/lib/formato";
@@ -33,7 +33,7 @@ type Props = {
 export function SheetAgendamento({aberto,onOpenChange,agendamento,dataInicial,horaInicial,agendamentosDoDia}:Props) {
   const navigate = useNavigate();
   const editando=Boolean(agendamento); const {data:servicos=[]}=useServicos(true); const salvar=useSalvarAgendamento(); const alterarStatus=useAlterarStatus(); const excluir=useExcluirAgendamento();
-  const concluirReceber=useConcluirComRecebimento(); const concluirPacote=useConcluirComPacote();
+  const concluirReceber=useConcluirComRecebimento(); const concluirPacote=useConcluirComPacote(); const criarComanda=useCriarComanda(); const {data:comandas=[]}=useComandas();
   const [clienteId,setClienteId]=useState<string|null>(null); const [servicoId,setServicoId]=useState<string|null>(null); const [data,setData]=useState(dataInicial); const [inicio,setInicio]=useState(horaInicial); const [fim,setFim]=useState(""); const [fimManual,setFimManual]=useState(false); const [observacoes,setObservacoes]=useState("");
   const {data:clientePacotes=[]}=useClientePacotes(clienteId??undefined); const {data:templates=[]}=useTemplates();
 
@@ -57,17 +57,34 @@ export function SheetAgendamento({aberto,onOpenChange,agendamento,dataInicial,ho
 
   async function onSalvar(){if(!clienteId){toast.error("Escolha a cliente.");return;}if(!servicoId){toast.error("Escolha o serviço.");return;}if(!fim){toast.error("Informe o horário final.");return;}try{await salvar.mutateAsync({...(agendamento?{id:agendamento.id}:{}),dados:{cliente_id:clienteId,servico_id:servicoId,data,hora_inicio:inicio,hora_fim:fim,observacoes:observacoes.trim()||null}});toast.success(editando?"Agendamento atualizado.":"Agendamento criado.");onOpenChange(false);}catch(e){toast.error(e instanceof Error?e.message:"Não foi possível salvar.");}}
   async function mudarStatus(status:StatusAgendamento){if(!agendamento)return;try{await alterarStatus.mutateAsync({id:agendamento.id,status});toast.success(`Agendamento marcado como ${STATUS_LABEL[status].toLowerCase()}.`);onOpenChange(false);}catch(e){toast.error(e instanceof Error?e.message:"Não foi possível atualizar.");}}
+  async function abrirAtendimento(){
+    if(!agendamento||!agendamento.servicos)return;
+    try{
+      const existente=comandas.find(c=>c.agendamento_id===agendamento.id&&c.status!=="cancelada");
+      if(!existente){
+        await criarComanda.mutateAsync({clienteId:agendamento.cliente_id,agendamentoId:agendamento.id,servico:{id:agendamento.servicos.id,nome:agendamento.servicos.nome,preco:Number(agendamento.servicos.preco)}});
+        toast.success("Atendimento aberto. Você já pode adicionar serviços, produtos e observações.");
+      }
+      onOpenChange(false);
+      await navigate({to:"/comandas"});
+    }catch(e){toast.error(e instanceof Error?e.message:"Não foi possível abrir o atendimento.");}
+  }
   async function finalizarRecebimento(){if(!agendamento)return;try{await concluirReceber.mutateAsync(agendamento.id);toast.success("Atendimento concluído. Registre o pagamento para fechar.");onOpenChange(false);await navigate({to:"/comandas"});}catch(e){toast.error(e instanceof Error?e.message:"Não foi possível finalizar o atendimento.");}}
   async function finalizarPacote(){if(!agendamento||!pacoteDisponivel)return;try{await concluirPacote.mutateAsync({agendamentoId:agendamento.id,clientePacoteId:pacoteDisponivel.id});toast.success(`Atendimento concluído usando ${pacoteDisponivel.nome}.`);onOpenChange(false);}catch(e){toast.error(e instanceof Error?e.message:"Não foi possível consumir o pacote.");}}
   async function onExcluir(){if(!agendamento)return;try{await excluir.mutateAsync(agendamento.id);toast.success("Agendamento excluído.");onOpenChange(false);}catch{toast.error("Não foi possível excluir.");}}
 
   const contato=agendamento?.clientes?.whatsapp||agendamento?.clientes?.telefone;
-  const templateConfirmacao=templates.find(t=>t.tipo==="confirmacao"&&t.ativo)?.mensagem;
-  const mensagemConfirmacao=(templateConfirmacao??"Olá, {nome}! Passando para confirmar seu horário em {data} às {hora} para {servico}.")
-    .replaceAll("{nome}",agendamento?.clientes?.nome??"")
-    .replaceAll("{servico}",agendamento?.servicos?.nome??"")
-    .replaceAll("{data}",agendamento?new Date(`${agendamento.data}T12:00:00`).toLocaleDateString("pt-BR"):"")
-    .replaceAll("{hora}",agendamento?horaCurta(agendamento.hora_inicio):"");
+  function montarMensagem(tipo:"confirmacao"|"lembrete"|"pos_atendimento",fallback:string){
+    const modelo=templates.find(t=>t.tipo===tipo&&t.ativo)?.mensagem??fallback;
+    return modelo
+      .replaceAll("{nome}",agendamento?.clientes?.nome??"")
+      .replaceAll("{servico}",agendamento?.servicos?.nome??"")
+      .replaceAll("{data}",agendamento?new Date(`${agendamento.data}T12:00:00`).toLocaleDateString("pt-BR"):"")
+      .replaceAll("{hora}",agendamento?horaCurta(agendamento.hora_inicio):"");
+  }
+  const mensagemConfirmacao=montarMensagem("confirmacao","Olá, {nome}! Passando para confirmar seu horário em {data} às {hora} para {servico}.");
+  const mensagemLembrete=montarMensagem("lembrete","Olá, {nome}! Lembrando do seu horário em {data} às {hora} para {servico}.");
+  const mensagemPos=montarMensagem("pos_atendimento","Olá, {nome}! Foi um prazer te atender hoje. Se precisar de algo sobre seu {servico}, estou por aqui 💛");
 
   return <Sheet open={aberto} onOpenChange={onOpenChange}><SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-2xl sm:max-w-lg md:inset-y-0 md:right-0 md:left-auto md:h-full md:max-h-none md:rounded-none"><SheetHeader className="px-5 pt-5 text-left"><SheetTitle>{editando?"Detalhes do agendamento":"Novo agendamento"}</SheetTitle><SheetDescription>{editando?"Atualize os dados ou avance o atendimento.":"Escolha a cliente, o serviço e o horário."}</SheetDescription></SheetHeader>
     <div className="space-y-5 px-5 pb-8 pt-2">
@@ -81,8 +98,10 @@ export function SheetAgendamento({aberto,onOpenChange,agendamento,dataInicial,ho
 
       {editando&&agendamento&&<div className="space-y-3 border-t border-border pt-4"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ações rápidas</p>
         <div className="grid grid-cols-2 gap-2"><Button variant="outline" className="h-11 rounded-xl" onClick={()=>void mudarStatus("confirmado")} disabled={agendamento.status==="confirmado"}><Check className="size-4"/> Confirmar</Button><Button variant="outline" className="h-11 rounded-xl" onClick={()=>void mudarStatus("em_atendimento")} disabled={agendamento.status==="em_atendimento"}><Play className="size-4"/> Iniciar</Button></div>
+        {agendamento.status==="em_atendimento"&&<Button variant="outline" className="h-11 w-full rounded-xl" onClick={()=>void abrirAtendimento()} disabled={criarComanda.isPending}><ReceiptText className="size-4"/> Abrir atendimento / adicionar extras</Button>}
         {agendamento.status!=="concluido"&&<div className="space-y-2">{pacoteDisponivel&&<Button variant="outline" className="h-11 w-full rounded-xl border-success/40 text-success" onClick={()=>void finalizarPacote()} disabled={concluirPacote.isPending}><Gift className="size-4"/> Concluir usando {pacoteDisponivel.nome}</Button>}<Button className="h-11 w-full rounded-xl" onClick={()=>void finalizarRecebimento()} disabled={concluirReceber.isPending}><ReceiptText className="size-4"/> Concluir e receber</Button></div>}
-        <div className="grid grid-cols-2 gap-2">{contato?<Button asChild variant="outline" className="h-11 rounded-xl"><a href={whatsappUrl(contato,mensagemConfirmacao)} target="_blank" rel="noreferrer"><MessageCircle className="size-4"/> WhatsApp</a></Button>:<Button variant="outline" className="h-11 rounded-xl" disabled><MessageCircle className="size-4"/> Sem WhatsApp</Button>}<Button variant="outline" className="h-11 rounded-xl" onClick={()=>void mudarStatus("nao_compareceu")} disabled={agendamento.status==="nao_compareceu"}><X className="size-4"/> Não veio</Button></div>
+        {contato&&<div className="grid grid-cols-2 gap-2"><Button asChild variant="outline" className="h-11 rounded-xl"><a href={whatsappUrl(contato,mensagemConfirmacao)} target="_blank" rel="noreferrer"><MessageCircle className="size-4"/> Confirmar</a></Button><Button asChild variant="outline" className="h-11 rounded-xl"><a href={whatsappUrl(contato,agendamento.status==="concluido"?mensagemPos:mensagemLembrete)} target="_blank" rel="noreferrer"><MessageCircle className="size-4"/> {agendamento.status==="concluido"?"Pós-atendimento":"Lembrete"}</a></Button></div>}
+        <div className="grid grid-cols-2 gap-2"><Button variant="outline" className="h-11 rounded-xl" onClick={()=>void mudarStatus("nao_compareceu")} disabled={agendamento.status==="nao_compareceu"}><X className="size-4"/> Não veio</Button>{!contato&&<Button variant="outline" className="h-11 rounded-xl" disabled><MessageCircle className="size-4"/> Sem WhatsApp</Button>}</div>
         <div className="grid grid-cols-2 gap-2"><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" className="h-11 rounded-xl text-destructive">Cancelar</Button></AlertDialogTrigger><AlertDialogContent className="rounded-2xl"><AlertDialogHeader><AlertDialogTitle>Cancelar este agendamento?</AlertDialogTitle><AlertDialogDescription>O horário volta a ficar livre na agenda.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="rounded-xl">Voltar</AlertDialogCancel><AlertDialogAction className="rounded-xl" onClick={()=>void mudarStatus("cancelado")}>Cancelar agendamento</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" className="h-11 rounded-xl text-muted-foreground"><Trash2 className="size-4"/> Excluir</Button></AlertDialogTrigger><AlertDialogContent className="rounded-2xl"><AlertDialogHeader><AlertDialogTitle>Excluir definitivamente?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="rounded-xl">Voltar</AlertDialogCancel><AlertDialogAction className="rounded-xl" onClick={()=>void onExcluir()}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div>
       </div>}
     </div>
