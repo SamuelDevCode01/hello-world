@@ -1,7 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 import { FormSalao, type ValoresSalao } from "@/components/salao/form-salao";
+import { Button } from "@/components/ui/button";
 import { useSalao, useSalaoAtual } from "@/contexts/salao";
 import { supabase } from "@/integrations/supabase/client";
 import { horaCurta, paraHoraISO } from "@/lib/datas";
@@ -30,6 +33,8 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 function PaginaConfiguracoes() {
   const salao = useSalaoAtual();
   const { recarregar } = useSalao();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   async function salvar(v: ValoresSalao) {
     const { error } = await supabase
@@ -57,6 +62,13 @@ function PaginaConfiguracoes() {
     recarregar();
   }
 
+  async function sair() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    await navigate({ to: "/auth", replace: true });
+  }
+
   return (
     <div className="space-y-5">
       <header>
@@ -82,6 +94,10 @@ function PaginaConfiguracoes() {
           }}
         />
       </div>
+
+      <Button variant="outline" className="h-12 w-full rounded-xl" onClick={() => void sair()}>
+        <LogOut className="size-4" /> Sair da conta
+      </Button>
     </div>
   );
 }
