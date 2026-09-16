@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 
 type RotaNav = "/agenda" | "/clientes" | "/servicos" | "/retornos" | "/produtos" | "/estoque" | "/pacotes" | "/financeiro" | "/configuracoes";
 type ItemNav = { to: RotaNav; label: string; icone: typeof CalendarDays };
-
 const PRINCIPAIS: ItemNav[] = [
   { to: "/agenda", label: "Agenda", icone: CalendarDays },
   { to: "/clientes", label: "Clientes", icone: Users },
@@ -42,37 +41,24 @@ export function AppShell({ children }: { children: ReactNode }) {
     raiz.style.setProperty("--sidebar-primary", valor);
     let tema = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
     const criouMeta = !tema;
-    if (!tema) {
-      tema = document.createElement("meta");
-      tema.name = "theme-color";
-      document.head.appendChild(tema);
-    }
+    if (!tema) { tema = document.createElement("meta"); tema.name = "theme-color"; document.head.appendChild(tema); }
     tema.content = valor;
-    return () => {
-      raiz.style.removeProperty("--primary");
-      raiz.style.removeProperty("--ring");
-      raiz.style.removeProperty("--sidebar-primary");
-      if (criouMeta) tema?.remove();
-    };
+    return () => { raiz.style.removeProperty("--primary"); raiz.style.removeProperty("--ring"); raiz.style.removeProperty("--sidebar-primary"); if (criouMeta) tema?.remove(); };
   }, [cor]);
 
   if (carregando) return <div className="min-h-screen bg-background p-5"><Skeleton className="h-8 w-48 rounded-xl"/><Skeleton className="mt-4 h-24 w-full rounded-xl"/><Skeleton className="mt-3 h-64 w-full rounded-xl"/></div>;
   if (!salao) return <OnboardingSalao />;
 
-  return <div className="min-h-screen bg-background">
-    <Sidebar nome={salao.nome} />
-    <div className="md:pl-64"><div className="sticky top-0 z-20 flex justify-end bg-background/85 px-4 py-2 backdrop-blur md:hidden"><BuscaGlobal compacta /></div><main className="mx-auto w-full max-w-4xl px-4 pb-28 pt-2 md:px-8 md:pb-10 md:pt-4">{children}</main></div>
-    <BottomNav />
-  </div>;
+  return <div className="min-h-screen bg-background"><Sidebar nome={salao.nome} logoUrl={salao.logo_url}/><div className="md:pl-64"><div className="sticky top-0 z-20 flex justify-end bg-background/85 px-4 py-2 backdrop-blur md:hidden"><BuscaGlobal compacta /></div><main className="mx-auto w-full max-w-4xl px-4 pb-28 pt-2 md:px-8 md:pb-10 md:pt-4">{children}</main></div><BottomNav /></div>;
 }
 
 function Item({ item, pathname }: { item: ItemNav; pathname: string }) {
   const Icone = item.icone; const ativo = pathname.startsWith(item.to);
   return <Link to={item.to} className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors", ativo ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground")}><Icone className="size-[18px]"/>{item.label}</Link>;
 }
-function Sidebar({ nome }: { nome: string }) {
+function Sidebar({ nome, logoUrl }: { nome: string; logoUrl: string | null }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  return <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-4 py-6 md:flex"><div className="flex items-center gap-3 px-2"><span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Scissors className="size-5"/></span><span className="truncate font-display text-base font-semibold">{nome}</span></div><div className="mt-5 px-1"><BuscaGlobal /></div><nav className="mt-5 flex flex-col gap-1">{PRINCIPAIS.map(i=><Item key={i.to} item={i} pathname={pathname}/>)}</nav><p className="mt-6 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Gestão</p><nav className="mt-2 flex flex-col gap-1">{GESTAO.map(i=><Item key={i.to} item={i} pathname={pathname}/>)}</nav></aside>;
+  return <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-4 py-6 md:flex"><div className="flex items-center gap-3 px-2">{logoUrl?<img src={logoUrl} alt="" className="size-10 rounded-xl border border-border object-cover"/>:<span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Scissors className="size-5"/></span>}<span className="truncate font-display text-base font-semibold">{nome}</span></div><div className="mt-5 px-1"><BuscaGlobal /></div><nav className="mt-5 flex flex-col gap-1">{PRINCIPAIS.map(i=><Item key={i.to} item={i} pathname={pathname}/>)}</nav><p className="mt-6 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Gestão</p><nav className="mt-2 flex flex-col gap-1">{GESTAO.map(i=><Item key={i.to} item={i} pathname={pathname}/>)}</nav></aside>;
 }
 function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
