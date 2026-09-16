@@ -10,12 +10,16 @@ function invalidar(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: ["financeiro-detalhado"] });
 }
 
-export function useAtualizarDescontoComanda() {
+export function useAtualizarComanda() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, desconto }: { id: string; desconto: number }) => {
+    mutationFn: async ({ id, desconto, observacoes }: { id: string; desconto: number; observacoes?: string | null }) => {
       if (desconto < 0) throw new Error("O desconto não pode ser negativo.");
-      const { error } = await db.from("comandas").update({ desconto }).eq("id", id).eq("status", "aberta");
+      const { error } = await db
+        .from("comandas")
+        .update({ desconto, observacoes: observacoes?.trim() || null })
+        .eq("id", id)
+        .eq("status", "aberta");
       if (error) throw error;
     },
     onSuccess: () => invalidar(qc),
@@ -27,6 +31,17 @@ export function useRemoverPagamento() {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await db.from("pagamentos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidar(qc),
+  });
+}
+
+export function useRemoverItemComanda() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await db.from("comanda_itens").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidar(qc),
