@@ -20,8 +20,8 @@ const Ctx = createContext<SalaoContexto | null>(null);
 export const CHAVE_SALAO = ["salao-atual"] as const;
 
 async function carregarSalao(): Promise<{ salao: Salao | null; papel: Papel | null; userId: string | null }> {
-  const { data: auth } = await supabase.auth.getUser();
-  const userId = auth.user?.id ?? null;
+  const { data: sessao } = await supabase.auth.getSession();
+  const userId = sessao.session?.user.id ?? null;
   if (!userId) return { salao: null, papel: null, userId: null };
 
   const { data, error } = await supabase
@@ -42,7 +42,7 @@ export function SalaoProvider({ children }: { children: ReactNode }) {
   const { data, isPending } = useQuery({
     queryKey: CHAVE_SALAO,
     queryFn: carregarSalao,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
   });
 
   return (
