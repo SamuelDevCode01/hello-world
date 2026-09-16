@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -9,8 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatarMoeda } from "@/lib/formato";
 
 const db = supabase as any;
-
-type Resultado = { tipo: "Cliente" | "Serviço" | "Produto"; id: string; titulo: string; detalhe: string };
+type Destino = "/clientes" | "/servicos" | "/produtos";
+type Resultado = { tipo: "Cliente" | "Serviço" | "Produto"; id: string; titulo: string; detalhe: string; destino: Destino };
 
 export function BuscaGlobal({ compacta = false }: { compacta?: boolean }) {
   const salao = useSalaoAtual();
@@ -30,9 +31,9 @@ export function BuscaGlobal({ compacta = false }: { compacta?: boolean }) {
         db.from("produtos").select("id,nome,marca,preco_venda").eq("salao_id", salao.id).ilike("nome", `%${q}%`).limit(8),
       ]);
       setResultados([
-        ...((clientes.data ?? []).map((c: any) => ({ tipo: "Cliente" as const, id: c.id, titulo: c.nome, detalhe: c.telefone || "Sem telefone" }))),
-        ...((servicos.data ?? []).map((s: any) => ({ tipo: "Serviço" as const, id: s.id, titulo: s.nome, detalhe: formatarMoeda(Number(s.preco)) }))),
-        ...((produtos.data ?? []).map((p: any) => ({ tipo: "Produto" as const, id: p.id, titulo: p.nome, detalhe: `${p.marca || ""}${p.marca ? " · " : ""}${formatarMoeda(Number(p.preco_venda))}` }))),
+        ...((clientes.data ?? []).map((c: any) => ({ tipo: "Cliente" as const, id: c.id, titulo: c.nome, detalhe: c.telefone || "Sem telefone", destino: "/clientes" as const }))),
+        ...((servicos.data ?? []).map((s: any) => ({ tipo: "Serviço" as const, id: s.id, titulo: s.nome, detalhe: formatarMoeda(Number(s.preco)), destino: "/servicos" as const }))),
+        ...((produtos.data ?? []).map((p: any) => ({ tipo: "Produto" as const, id: p.id, titulo: p.nome, detalhe: `${p.marca || ""}${p.marca ? " · " : ""}${formatarMoeda(Number(p.preco_venda))}`, destino: "/produtos" as const }))),
       ]);
       setCarregando(false);
     }, 250);
@@ -49,7 +50,7 @@ export function BuscaGlobal({ compacta = false }: { compacta?: boolean }) {
       <SheetHeader className="px-5 pt-5 text-left"><SheetTitle>Busca rápida</SheetTitle><SheetDescription>Clientes, serviços e produtos do seu salão.</SheetDescription></SheetHeader>
       <div className="space-y-4 px-5 pb-8 pt-3">
         <div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/><Input autoFocus className="h-12 rounded-xl pl-9" value={termo} onChange={(e)=>setTermo(e.target.value)} placeholder="Digite nome, telefone, serviço ou produto"/></div>
-        {carregando ? <p className="py-8 text-center text-sm text-muted-foreground">Buscando...</p> : termo.length >= 2 && resultados.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Nenhum resultado encontrado.</p> : <div className="space-y-2">{resultados.map(r=><div key={`${r.tipo}-${r.id}`} className="rounded-xl border px-4 py-3"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{r.tipo}</p><p className="font-medium">{r.titulo}</p><p className="text-xs text-muted-foreground">{r.detalhe}</p></div>)}</div>}
+        {carregando ? <p className="py-8 text-center text-sm text-muted-foreground">Buscando...</p> : termo.length >= 2 && resultados.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Nenhum resultado encontrado.</p> : <div className="space-y-2">{resultados.map(r=><Link key={`${r.tipo}-${r.id}`} to={r.destino} onClick={()=>setAberto(false)} className="block rounded-xl border px-4 py-3 transition-colors hover:bg-muted/50"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{r.tipo}</p><p className="font-medium">{r.titulo}</p><p className="text-xs text-muted-foreground">{r.detalhe}</p></Link>)}</div>}
       </div>
     </SheetContent>
   </Sheet>;
