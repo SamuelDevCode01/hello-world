@@ -1,11 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  CalendarDays,
-  Ellipsis,
-  ReceiptText,
-  Scissors,
-  Users,
-} from "lucide-react";
+import { CalendarDays, Scissors, Settings, Users } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
 import { OnboardingSalao } from "@/components/salao/onboarding-salao";
@@ -14,7 +8,7 @@ import { useSalao } from "@/contexts/salao";
 import { cn } from "@/lib/utils";
 
 type ItemNav = {
-  to: "/agenda" | "/clientes" | "/comandas" | "/mais";
+  to: "/agenda" | "/clientes" | "/servicos" | "/configuracoes";
   label: string;
   icone: typeof CalendarDays;
 };
@@ -22,8 +16,8 @@ type ItemNav = {
 const ITENS: ItemNav[] = [
   { to: "/agenda", label: "Agenda", icone: CalendarDays },
   { to: "/clientes", label: "Clientes", icone: Users },
-  { to: "/comandas", label: "Comandas", icone: ReceiptText },
-  { to: "/mais", label: "Mais", icone: Ellipsis },
+  { to: "/servicos", label: "Serviços", icone: Scissors },
+  { to: "/configuracoes", label: "Configurações", icone: Settings },
 ];
 
 const COR_PADRAO = "#C1622D";
