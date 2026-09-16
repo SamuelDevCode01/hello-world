@@ -9,6 +9,7 @@ export function useFinanceiroDetalhado() {
   const salao = useSalaoAtual();
   return useQuery({
     queryKey: ["financeiro-detalhado", salao.id],
+    staleTime: 15_000,
     queryFn: async () => {
       const agora = new Date();
       const hoje = `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,"0")}-${String(agora.getDate()).padStart(2,"0")}`;
@@ -18,7 +19,7 @@ export function useFinanceiroDetalhado() {
       const inicioMesDate = `${inicioMesData.getFullYear()}-${String(inicioMesData.getMonth()+1).padStart(2,"0")}-01`;
 
       const [comandas, pagamentos, atendHoje, concluidosMes] = await Promise.all([
-        db.from("comandas").select("id,total,status,opened_at,closed_at,comanda_itens(tipo,quantidade)").eq("salao_id", salao.id).gte("opened_at", inicioMes),
+        db.from("comandas").select("id,total,status,opened_at,closed_at,comanda_itens:comanda_itens!comanda_itens_comanda_salao_fkey(tipo,quantidade)").eq("salao_id", salao.id).gte("opened_at", inicioMes),
         db.from("pagamentos").select("forma_pagamento,valor,created_at").eq("salao_id", salao.id).gte("created_at", inicioMes),
         db.from("agendamentos").select("id,status").eq("salao_id", salao.id).eq("data", hoje),
         db.from("agendamentos").select("id").eq("salao_id", salao.id).eq("status", "concluido").gte("data", inicioMesDate),
