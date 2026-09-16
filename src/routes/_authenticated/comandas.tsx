@@ -12,19 +12,20 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Textarea } from "@/components/ui/textarea";
 import { useClientes } from "@/hooks/use-clientes";
 import { useAtualizarComanda, useCancelarComanda, useRemoverItemComanda, useRemoverPagamento } from "@/hooks/use-comanda-acoes";
-import { useAdicionarItemComanda, useAdicionarPagamento, useComandas, useCriarComanda, useFecharComanda, useProdutos, type Comanda } from "@/hooks/use-operacao";
+import { useComandas } from "@/hooks/use-operacao-leituras";
+import { useAdicionarItemComanda, useAdicionarPagamento, useCriarComanda, useFecharComanda, useProdutos, type Comanda } from "@/hooks/use-operacao";
 import { useServicos } from "@/hooks/use-servicos";
 import { formatarMoeda } from "@/lib/formato";
 
 export const Route = createFileRoute("/_authenticated/comandas")({ component: PaginaComandas, head: () => ({ meta: [{ title: "Atendimento e pagamento | Agenda do Salão" }] }) });
 
 function PaginaComandas(){
-  const {data:comandas=[]}=useComandas(); const {data:clientes=[]}=useClientes(); const criar=useCriarComanda();
+  const {data:comandas=[],isLoading,isError}=useComandas(); const {data:clientes=[]}=useClientes(); const criar=useCriarComanda();
   const [clienteId,setClienteId]=useState(""); const [aberta,setAberta]=useState<Comanda|null>(null);
   async function nova(){if(!clienteId){toast.error("Escolha a cliente.");return;}try{const id=await criar.mutateAsync({clienteId});setClienteId("");setAberta({id} as Comanda);toast.success("Atendimento aberto.");}catch{toast.error("Não foi possível abrir o atendimento.");}}
   return <div className="space-y-5"><header><h1 className="font-display text-2xl">Atendimento e pagamento</h1><p className="text-sm text-muted-foreground">Tela contextual para finalizar serviços, vendas, descontos e pagamentos.</p></header>
     <div className="card-elegante space-y-3 p-4"><Label>Abrir atendimento avulso</Label><div className="flex gap-2"><Select value={clienteId} onValueChange={setClienteId}><SelectTrigger className="h-12 flex-1 rounded-xl"><SelectValue placeholder="Cliente"/></SelectTrigger><SelectContent>{clientes.map(c=><SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent></Select><Button className="h-12 rounded-xl" onClick={()=>void nova()} disabled={criar.isPending}><Plus className="size-4"/> Abrir</Button></div></div>
-    {comandas.length===0?<div className="card-elegante flex flex-col items-center gap-3 px-6 py-12 text-center"><ReceiptText className="size-8 text-muted-foreground"/><p className="text-sm text-muted-foreground">Nenhum atendimento financeiro registrado.</p></div>:<div className="space-y-2">{comandas.map(c=><button key={c.id} onClick={()=>setAberta(c)} className="card-elegante flex w-full items-center gap-3 px-4 py-3 text-left"><span className="min-w-0 flex-1"><span className="block font-medium">{c.clientes?.nome??"Cliente"}</span><span className="text-xs text-muted-foreground">{new Date(c.opened_at).toLocaleString("pt-BR")} · <span className="capitalize">{c.status}</span></span></span><strong>{formatarMoeda(Number(c.total))}</strong></button>)}</div>}
+    {isLoading?<div className="card-elegante px-5 py-8 text-center text-sm text-muted-foreground">Carregando atendimentos...</div>:isError?<div className="card-elegante px-5 py-8 text-center text-sm text-destructive">Não foi possível carregar os atendimentos.</div>:comandas.length===0?<div className="card-elegante flex flex-col items-center gap-3 px-6 py-12 text-center"><ReceiptText className="size-8 text-muted-foreground"/><p className="text-sm text-muted-foreground">Nenhum atendimento financeiro registrado.</p></div>:<div className="space-y-2">{comandas.map(c=><button key={c.id} onClick={()=>setAberta(c)} className="card-elegante flex w-full items-center gap-3 px-4 py-3 text-left"><span className="min-w-0 flex-1"><span className="block font-medium">{c.clientes?.nome??"Cliente"}</span><span className="text-xs text-muted-foreground">{new Date(c.opened_at).toLocaleString("pt-BR")} · <span className="capitalize">{c.status}</span></span></span><strong>{formatarMoeda(Number(c.total))}</strong></button>)}</div>}
     <SheetComanda comanda={aberta} onOpenChange={v=>!v&&setAberta(null)}/>
   </div>;
 }
