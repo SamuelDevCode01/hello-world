@@ -11,7 +11,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useClientes } from "@/hooks/use-clientes";
-import { useComprarPacote, usePacotes, useSalvarPacote, type Pacote } from "@/hooks/use-operacao";
+import { usePacotes } from "@/hooks/use-operacao-leituras";
+import { useComprarPacote, useSalvarPacote, type Pacote } from "@/hooks/use-operacao";
 import { useServicos } from "@/hooks/use-servicos";
 import { formatarMoeda } from "@/lib/formato";
 
@@ -23,13 +24,13 @@ export const Route = createFileRoute("/_authenticated/pacotes")({
 type ItemDraft = { servico_id: string; quantidade: number };
 
 function PaginaPacotes() {
-  const { data: pacotes = [] } = usePacotes();
+  const { data: pacotes = [], isLoading, isError } = usePacotes();
   const [editando,setEditando] = useState<Pacote|null>(null);
   const [aberto,setAberto] = useState(false);
   const [vendendo,setVendendo] = useState<Pacote|null>(null);
   return <div className="space-y-5">
     <header className="flex items-center justify-between gap-3"><div><h1 className="font-display text-2xl">Pacotes</h1><p className="text-sm text-muted-foreground">Combos de serviços com validade e saldo.</p></div><Button className="rounded-xl" onClick={()=>{setEditando(null);setAberto(true)}}><Plus className="size-4"/> Novo</Button></header>
-    {pacotes.length===0?<div className="card-elegante flex flex-col items-center gap-3 px-6 py-12 text-center"><Gift className="size-8 text-muted-foreground"/><p className="text-sm text-muted-foreground">Nenhum pacote cadastrado.</p><Button variant="outline" className="rounded-xl" onClick={()=>setAberto(true)}>Criar primeiro pacote</Button></div>:<div className="space-y-2">{pacotes.map(p=><div key={p.id} className="card-elegante flex items-center gap-3 px-4 py-4"><button className="min-w-0 flex-1 text-left" onClick={()=>{setEditando(p);setAberto(true)}}><span className="block font-medium">{p.nome}</span><span className="block text-xs text-muted-foreground">{p.pacote_itens?.map(i=>`${i.quantidade}× ${i.servicos?.nome??"Serviço"}`).join(" · ") || "Sem itens"} · {p.validade_dias} dias</span></button><div className="text-right"><p className="font-medium">{formatarMoeda(p.preco)}</p><Button size="sm" variant="outline" className="mt-1 rounded-xl" onClick={()=>setVendendo(p)}><ShoppingBag className="size-3.5"/> Vender</Button></div></div>)}</div>}
+    {isLoading?<div className="card-elegante px-5 py-8 text-center text-sm text-muted-foreground">Carregando pacotes...</div>:isError?<div className="card-elegante px-5 py-8 text-center text-sm text-destructive">Não foi possível carregar os pacotes. Atualize a página e tente novamente.</div>:pacotes.length===0?<div className="card-elegante flex flex-col items-center gap-3 px-6 py-12 text-center"><Gift className="size-8 text-muted-foreground"/><p className="text-sm text-muted-foreground">Nenhum pacote cadastrado.</p><Button variant="outline" className="rounded-xl" onClick={()=>setAberto(true)}>Criar primeiro pacote</Button></div>:<div className="space-y-2">{pacotes.map(p=><div key={p.id} className="card-elegante flex items-center gap-3 px-4 py-4"><button className="min-w-0 flex-1 text-left" onClick={()=>{setEditando(p);setAberto(true)}}><span className="block font-medium">{p.nome}</span><span className="block text-xs text-muted-foreground">{p.pacote_itens?.map(i=>`${i.quantidade}× ${i.servicos?.nome??"Serviço"}`).join(" · ") || "Sem itens"} · {p.validade_dias} dias</span></button><div className="text-right"><p className="font-medium">{formatarMoeda(p.preco)}</p><Button size="sm" variant="outline" className="mt-1 rounded-xl" onClick={()=>setVendendo(p)}><ShoppingBag className="size-3.5"/> Vender</Button></div></div>)}</div>}
     <SheetPacote aberto={aberto} onOpenChange={setAberto} pacote={editando}/>
     <SheetVenda pacote={vendendo} onOpenChange={(v)=>!v&&setVendendo(null)}/>
   </div>;
